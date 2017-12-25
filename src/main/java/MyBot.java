@@ -1,90 +1,112 @@
 import org.telegram.telegrambots.api.methods.send.SendMessage;
-import org.telegram.telegrambots.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 public class MyBot extends TelegramLongPollingBot {
 
-    //ArrayList<String> users = new ArrayList<>();
-    boolean codeMode = false;
+    ArrayList<String> users = new ArrayList<>();
+    HashMap<String, String> answer = new HashMap<>();
+    boolean AskMode = false;
+
+    public MyBot() {
+        answer.put("1", "Привет.");
+        answer.put("2", "Как твои дела?.");
+        answer.put("3", "Что делаешь?");
+        answer.put("4", "Как ты относишься к коммунизму?");
+        answer.put("5", "А при отражении в жеркале свет теряет свои энергитические свойства?");
+        answer.put("6", "Любите просматривать свежже испечёные мемчики?");
+    }
+
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (update.getMessage().hasText()){
-            String text = update.getMessage().getText();
-            long charId = update.getMessage().getChatId();
-            sendText(text, charId);
-            if (text.equals("/newGame")) {
-                newGame();
-                user.bitcoins +=text.length();
-                nextDay(charId);
-                codeMode = false;
-            }else if (text.equals("/code")) {
-                codeMode = true;
-                sendText("Ваш код на сегодня", charId);
+        if (update.hasMessage()) {
+            long chatId = update.getMessage().getChatId();
+            String message = update.getMessage().getText();
+            int messageId = update.getMessage().getMessageId();
+
+
+            if (AskMode) {
+                String question = answer.get(message);
+                sendMessage("" + question, chatId);
+                AskMode = false;
+            } else {
+                switch (message) {
+                    case "/getQuestion":
+                        getQuestion(chatId);
+                        sendMessage("Что тебя интересует?", chatId);
+                        AskMode = true;
+                        break;
+                    case "/addQuestion":
+                        addAsk(message, chatId);
+                        sendMessage("Скажи, пожалуйста, номер, а затем сам вопрос", chatId);
+                        AskMode = true;
+                        break;
+                    default:
+                        sendMessage(message, chatId, messageId);
+                }
+
             }
         }
-    }//else if (upadte.getMessege().hasPhoto()){
-    // String photo = update.getMessege().getPhoto().get(0).FileId();
-    //    long charId = update.getMessege().getCharId();
-    //    sendPhoto("http://static4.businessinsider.com/image/55ba87b8dd0895c81c8b4581-480/pepe-the-frog.png", charId);
-    //}
+    }
+
+
 
     @Override
     public String getBotUsername() {
         return "StringSadPepeFrogBot";
     }
 
-
-
     @Override
     public String getBotToken() {
-        return "455170288:AAFjQsm1SQJXA9aZA663ckeQ1J524M1xguU" ;
+        return "455170288:AAFjQsm1SQjXA9Aza663ckeQ1J524M1xguU";
     }
 
-    private void sendText(String text, long charId) {
-        SendMessage resquest = new SendMessage();
-        resquest.setText(text);
-        resquest.setChatId(charId);
+
+    private void addAsk(String text, long charId) {
+        String[] кусочки = text.split(" ");
+        answer.put(кусочки[0], кусочки[1]);
+        sendMessage("Вопрос добавлен, Спасибо.)", charId);
     }
 
-   User user;
-    int day;
-
-    private void newGame() {
-        day = 0;
-        user = new User();
+    private void getQuestion(long charId) {
+//
     }
 
-    private void nextDay(long charId) {
-        day++;
-        sendText("День" + day, charId);
-    }
 
-    private void sendPhoto(long chatId, String photo) {
-        // создаём запрос
-        SendPhoto request = new SendPhoto();
-        // устанавливаем идентификатор чата, в который нужно отправить фоточку
-        request.setChatId(chatId);
-        // устанавливаем фотографию
-        request.setPhoto(photo);
 
-        // отправляем запрос
-        try { // ALT + ENTER !!!!!!!!!!!!!!!!!
-            sendPhoto(request);
+    //===============================================================================================================================
+
+    private void sendMessage(String text, long chatId) {
+        SendMessage sendMessage = new SendMessage()
+                .setText(text)
+                .setChatId(chatId);
+
+
+        try {
+            execute(sendMessage);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
-
-
-      //  try {
-        //    execute(resquest);
-        //} catch (TelegramApiException e) {
-          //  e.printStackTrace();
-        //}
-
-
     }
 
+
+    private void sendMessage(String text, long chatId, int messageId) {
+        SendMessage sendMessage = new SendMessage()
+                .setText(text)
+                .setChatId(chatId)
+                .setReplyToMessageId(messageId);
+
+
+        try {
+            execute(sendMessage);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
 }
