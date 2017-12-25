@@ -84,7 +84,7 @@ public class MyBot extends TelegramLongPollingBot {
                     GameMode = true;
                     break;
                 case "":
-                    a
+                    
                 default:
                     sendMessage(message, chatId, messageId);
 
